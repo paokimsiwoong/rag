@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.search import keyword_search_command
+from lib.keyword_search import keyword_search_command
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
