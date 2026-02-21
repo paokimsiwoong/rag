@@ -1,5 +1,6 @@
 import json
 import os
+import string
 
 DEFAULT_SEARCH_LIMIT = 5
 
@@ -29,15 +30,71 @@ def keyword_search(keyword: str, data: dict, limit: int = DEFAULT_SEARCH_LIMIT) 
 
     movies = data["movies"]
 
+    # trans = str.maketrans("", "", string.punctuation)
+    # str.maketrans(from, to, remove)
+    # string.punctuation == '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+    # string.punctuation에 속하는 글자는 지우는 translation
+    # # from, to는 ""로 두어 글자 변환은 하지 않고, remove만 string.punctuation로 두어 punctuation 글자들만 지우기
+
+    # keyword_lowered = keyword.lower()
+    # keyword_remove_punc = keyword_lowered.translate(trans)
+
+    keyword_preprocessed = preprocess_text(keyword)
+
     for movie in movies:
-        if keyword in movie["title"]:
+        title_preprocessed = preprocess_text(movie["title"])
+
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        # checker = False
+        #
+        # for title_token in title_preprocessed:
+        #     if checker:
+        #         break
+        #     for keyword_token in keyword_preprocessed:
+        #         if keyword_token in title_token:
+        #             results.append(movie)
+        #             checker = True
+        #             break
+        # @@@ 다중 루프 한꺼번에 나오는 처리는 함수 return이 더 깔끔
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        if has_matching_token(keyword_tokens=keyword_preprocessed, title_tokens=title_preprocessed):
             results.append(movie)
-            # @@@ 검색 결과 길이 제한에 맞추어 for 루프 조기 종료
-            if len(results) >= limit:
-                break
+        
+        # @@@ 검색 결과 길이 제한에 맞추어 for 루프 조기 종료
+        if len(results) >= limit:
+            break
 
 
     return results
+
+
+# 일부라도 일치하는 토큰이 있는지 확인하는 함수
+def has_matching_token(keyword_tokens: list[str], title_tokens: list[str]) -> bool:
+    for title_token in title_tokens:
+        for keyword_token in keyword_tokens:
+            if keyword_token in title_token:
+                return True
+            
+    return False
+
+# 텍스트 전처리 함수
+def preprocess_text(text:str) -> list[str]:
+    # string.punctuation에 속하는 글자는 지우는 translation
+    trans = str.maketrans("", "", string.punctuation)
+    # str.maketrans(from, to, remove)로 .translate에 쓰이는 translation 테이블 만들기
+    # # string.punctuation == '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+    # # from, to는 ""로 두어 글자 변환은 하지 않고, remove만 string.punctuation로 두어 punctuation 글자들만 지우기
+
+    text_lowered = text.lower()
+    text_remove_punc = text_lowered.translate(trans)
+
+    text_split = text_remove_punc.split(" ")
+    text_split = [t for t in text_split if len(t) > 0]
+
+    return text_split
+
+
 
 def keyword_search_command(query: str) -> list[str]:
 
