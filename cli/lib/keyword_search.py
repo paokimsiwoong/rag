@@ -19,10 +19,21 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
 # DATA_PATH = "/home/paokimsiwoong/workspace/github.com/paokimsiwoong/rag/data/movies.json"
 
+TEXT_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
+
+# movies.json 읽어오는 함수
 def load_json(data_path: str) -> dict:
     with open(data_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data
+
+# stopwords.txt 읽어오는 함수
+def read_text(text_path: str) -> list[str]:
+    with open(text_path, 'r', encoding='utf-8') as f:
+        words = f.read()
+
+        return words.splitlines()
+
 
 def keyword_search(keyword: str, data: dict, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
 
@@ -38,6 +49,9 @@ def keyword_search(keyword: str, data: dict, limit: int = DEFAULT_SEARCH_LIMIT) 
 
     # keyword_lowered = keyword.lower()
     # keyword_remove_punc = keyword_lowered.translate(trans)
+
+    # stop_words = read_text(TEXT_PATH)
+    # @@@ preprocess_text 함수 안으로 이동
 
     keyword_preprocessed = preprocess_text(keyword)
 
@@ -80,19 +94,28 @@ def has_matching_token(keyword_tokens: list[str], title_tokens: list[str]) -> bo
 
 # 텍스트 전처리 함수
 def preprocess_text(text:str) -> list[str]:
+    text_lowered = text.lower()
+    # 소문자로 통일
+
     # string.punctuation에 속하는 글자는 지우는 translation
     trans = str.maketrans("", "", string.punctuation)
     # str.maketrans(from, to, remove)로 .translate에 쓰이는 translation 테이블 만들기
     # # string.punctuation == '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
     # # from, to는 ""로 두어 글자 변환은 하지 않고, remove만 string.punctuation로 두어 punctuation 글자들만 지우기
 
-    text_lowered = text.lower()
     text_remove_punc = text_lowered.translate(trans)
+    # punctuation 제거
 
     text_split = text_remove_punc.split(" ")
     text_split = [t for t in text_split if len(t) > 0]
+    # 토근화 및 '' 제거
 
-    return text_split
+    stop_words = read_text(TEXT_PATH)
+
+    text_without_stop_w = [t for t in text_split if t not in stop_words]
+    # stop words 제외
+
+    return text_without_stop_w
 
 
 
