@@ -2,8 +2,10 @@ import json
 import os
 import string
 
-DEFAULT_SEARCH_LIMIT = 5
+from nltk.stem import PorterStemmer
+# stemming(어근 추출) 라이브러리
 
+DEFAULT_SEARCH_LIMIT = 5
 
 # print(__file__)
 # /home/paokimsiwoong/workspace/github.com/paokimsiwoong/rag/cli/lib/search.py
@@ -22,14 +24,14 @@ DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
 TEXT_PATH = os.path.join(PROJECT_ROOT, "data", "stopwords.txt")
 
 # movies.json 읽어오는 함수
-def load_json(data_path: str) -> dict:
-    with open(data_path, 'r', encoding='utf-8') as f:
+def load_json() -> dict:
+    with open(DATA_PATH, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data
 
 # stopwords.txt 읽어오는 함수
-def read_text(text_path: str) -> list[str]:
-    with open(text_path, 'r', encoding='utf-8') as f:
+def read_text() -> list[str]:
+    with open(TEXT_PATH, 'r', encoding='utf-8') as f:
         words = f.read()
 
         return words.splitlines()
@@ -110,12 +112,17 @@ def preprocess_text(text:str) -> list[str]:
     text_split = [t for t in text_split if len(t) > 0]
     # 토근화 및 '' 제거
 
-    stop_words = read_text(TEXT_PATH)
+    stop_words = read_text()
 
     text_without_stop_w = [t for t in text_split if t not in stop_words]
     # stop words 제외
 
-    return text_without_stop_w
+    stemmer = PorterStemmer()
+    # stemming에 쓰일 클래스 인스턴스
+
+    text_stemmed = [stemmer.stem(t) for t in text_without_stop_w]
+
+    return text_stemmed
 
 
 
@@ -123,7 +130,7 @@ def keyword_search_command(query: str) -> list[str]:
 
     results = []
 
-    data = load_json(DATA_PATH)
+    data = load_json()
 
     search_results = keyword_search(query, data)
 
